@@ -98,6 +98,10 @@ load($("logo"), "logo"); load($("photo"), "photo");
 document.querySelectorAll("input:not([type=file]),select").forEach(e => e.addEventListener("input", draw));
 $("dl").onclick = () => c.toBlob(b => { const a = document.createElement("a"); a.href = URL.createObjectURL(b);
   a.download = "advert_" + ($("name").value || "hga").toLowerCase().replace(/[^a-z0-9]+/g, "_") + ".png"; a.click(); });
+// ?name=..&head=..&sub=..&contact=..&web=..&town=..&look=.. pre-fills the form; &render=1 shows only the advert at full size (for bulk mock-ups).
+const qs = new URLSearchParams(location.search);
+for (const k of ["name", "head", "sub", "contact", "web", "town", "look"]) if (qs.has(k)) $(k).value = qs.get(k);
+if (qs.has("render")) { document.body.style.padding = "0"; document.querySelector(".wrap").style.display = "none"; document.body.appendChild(c); c.style.cssText = "width:1920px;height:1080px;border:0"; }
 Promise.all(["700 64px Lora", "300 40px Poppins", "400 40px Poppins", "500 40px Poppins"].map(f => document.fonts.load(f))).then(draw, draw);
 draw();
 </script>
