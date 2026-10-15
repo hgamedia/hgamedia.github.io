@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>HGA Advert Maker</title>
+<link rel="icon" href="../avatar.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&family=Poppins:wght@300;400;500&display=swap">
+<style>
+:root{--night:#070b16;--navy:#0e1528;--panel:#121b33;--gold:#e3c88f;--ivory:#f3efe6;--mist:#a3abbf;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--night);color:var(--ivory);font:300 15px/1.5 "Poppins","Segoe UI",sans-serif;padding:0 16px 50px}
+.wrap{max-width:1100px;margin:0 auto}
+header{padding:24px 0 12px;border-bottom:1px solid #c9ad78;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px}
+header b{font:700 24px/1 "Lora",serif;letter-spacing:.05em}
+a{color:var(--gold)}
+.grid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:20px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:13px;color:var(--mist);margin:10px 0 4px}
+input,select{width:100%;background:var(--panel);color:var(--ivory);border:1px solid rgba(201,173,120,.5);padding:9px;font:16px "Poppins"}
+canvas{width:100%;height:auto;border:1px solid rgba(201,173,120,.5);display:block}
+button{margin-top:14px;background:var(--gold);color:var(--night);border:0;padding:12px 18px;font:500 12px "Poppins";letter-spacing:.2em;text-transform:uppercase;cursor:pointer}
+.mist{color:var(--mist);font-size:13px;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div><b>HGA MEDIA</b> <span style="color:var(--gold);letter-spacing:.3em;font-size:11px;text-transform:uppercase">&nbsp;Advert maker</span></div><a href="./">Back to staff area</a></header>
+<div class="grid">
+<form id="f" onsubmit="return false">
+  <label for="name">Business name</label><input id="name" value="Barbería Ejemplo">
+  <label for="head">Headline (the offer, short)</label><input id="head" value="Fresh cut + beard trim, €18">
+  <label for="sub">Second line</label><input id="sub" value="Walk-ins welcome · Sin cita">
+  <label for="contact">Phone / WhatsApp</label><input id="contact" value="+34 600 000 000">
+  <label for="web">Instagram or website</label><input id="web" value="@barberiaejemplo">
+  <label for="town">Town</label><input id="town" value="Torremolinos">
+  <label for="logo">Logo (optional)</label><input id="logo" type="file" accept="image/*">
+  <label for="photo">Photo (optional, shows on the right)</label><input id="photo" type="file" accept="image/*">
+  <label for="look">Look</label><select id="look"><option value="navy">Navy and gold (house style)</option><option value="light">Light</option><option value="bold">Bold black and yellow</option></select>
+  <button id="dl" type="button">Download advert (PNG)</button>
+  <p class="mist">1920 × 1080, ready for the bar TVs. Big text, one offer, one way to contact. The office adds the QR code. Send the file with the customer's details to HGAmediaCosta@outlook.com.</p>
+</form>
+<div><canvas id="c" width="1920" height="1080"></canvas></div>
+</div>
+</div>
+<script>
+const c = document.getElementById("c"), x = c.getContext("2d"), $ = id => document.getElementById(id);
+const LOOKS = {
+  navy:  {bg: ["#070b16", "#121b33"], text: "#f3efe6", accent: "#e3c88f", soft: "#a3abbf"},
+  light: {bg: ["#f6f1e7", "#e9e0cf"], text: "#141a2b", accent: "#9a7230", soft: "#4a5468"},
+  bold:  {bg: ["#0b0b0b", "#1b1b1b"], text: "#ffffff", accent: "#ffd400", soft: "#cfcfcf"}
+};
+const img = {logo: null, photo: null};
+
+function wrap(text, maxW, font) {          // split text into lines that fit maxW
+  x.font = font; const words = text.split(/\s+/), lines = []; let line = "";
+  for (const w of words) { const t = line ? line + " " + w : w; if (x.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line); return lines;
+}
+function cover(im, dx, dy, dw, dh) {       // draw an image filling the box, cropped, never stretched
+  const s = Math.max(dw / im.width, dh / im.height), sw = dw / s, sh = dh / s;
+  x.drawImage(im, (im.width - sw) / 2, (im.height - sh) / 2, sw, sh, dx, dy, dw, dh);
+}
+function draw() {
+  const L = LOOKS[$("look").value], W = 1920, H = 1080, pad = 120;
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, L.bg[0]); g.addColorStop(1, L.bg[1]);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const textW = img.photo ? 1060 : W - 2 * pad;
+  if (img.photo) { cover(img.photo, 1300, 0, 620, H); x.fillStyle = L.accent; x.fillRect(1296, 0, 4, H); }
+  // top row: logo or name, town
+  let y = 110;
+  if (img.logo) { const h = 130, w = Math.min(420, img.logo.width * h / img.logo.height); x.drawImage(img.logo, pad, y - 20, w, h); y += 150; }
+  else { x.fillStyle = L.text; x.font = "700 64px Lora"; x.fillText($("name").value, pad, y + 40); y += 90; }
+  x.fillStyle = L.accent; x.font = "400 30px Poppins"; x.fillText($("town").value.toUpperCase().split("").join(" "), pad, y + 10);
+  x.fillRect(pad, y + 40, textW, 2);
+  // headline
+  let font = "700 112px Lora", lines = wrap($("head").value, textW, font);
+  if (lines.length > 3) { font = "700 84px Lora"; lines = wrap($("head").value, textW, font); }
+  const lh = parseInt(font.split(" ")[1]) * 1.12, subs = wrap($("sub").value, textW, "300 44px Poppins").slice(0, 2);
+  const block = Math.min(lines.length, 4) * lh + subs.length * 58;   // centre headline + second line between the rules
+  x.font = font; x.fillStyle = L.text; let hy = (y + 40 + H - 190) / 2 - block / 2 + lh * 0.8;
+  lines.slice(0, 4).forEach((l, i) => { x.fillStyle = i === lines.length - 1 ? L.accent : L.text; x.fillText(l, pad, hy); hy += lh; });
+  x.font = "300 44px Poppins"; x.fillStyle = L.soft; subs.forEach(l => { x.fillText(l, pad, hy + 10); hy += 58; });
+  // contact strip
+  x.fillStyle = L.accent; x.fillRect(pad, H - 190, textW, 2);
+  x.font = "500 52px Poppins"; x.fillStyle = L.text; x.fillText($("contact").value, pad, H - 110);
+  x.font = "400 40px Poppins"; x.fillStyle = L.accent;
+  const cw = x.measureText($("web").value).width; x.fillText($("web").value, pad + textW - cw, H - 112);
+}
+function load(input, key) {
+  input.addEventListener("change", () => {
+    const f = input.files[0]; if (!f) { img[key] = null; draw(); return; }
+    const im = new Image(); im.onload = () => { img[key] = im; draw(); }; im.src = URL.createObjectURL(f);
+  });
+}
+load($("logo"), "logo"); load($("photo"), "photo");
+document.querySelectorAll("input:not([type=file]),select").forEach(e => e.addEventListener("input", draw));
+$("dl").onclick = () => c.toBlob(b => { const a = document.createElement("a"); a.href = URL.createObjectURL(b);
+  a.download = "advert_" + ($("name").value || "hga").toLowerCase().replace(/[^a-z0-9]+/g, "_") + ".png"; a.click(); });
+Promise.all(["700 64px Lora", "300 40px Poppins", "400 40px Poppins", "500 40px Poppins"].map(f => document.fonts.load(f))).then(draw, draw);
+draw();
+</script>
+</body>
+</html>
